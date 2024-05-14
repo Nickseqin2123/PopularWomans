@@ -24,7 +24,18 @@ class TagPost(models.Model):
     
     def __str__(self) -> str:
         return self.tag
+    
+    def get_absolute_url(self):
+        return reverse('tag', kwargs={'tag_slug': self.slug})
 
+
+class Husband(models.Model):
+    name = models.CharField(max_length=100)
+    age = models.IntegerField(null=True)
+    
+    def __str__(self):
+        return self.name
+    
 
 class Women(models.Model):
     class Status(models.IntegerChoices):
@@ -39,6 +50,12 @@ class Women(models.Model):
     is_published = models.BooleanField(choices=Status.choices, default=Status.DRAFT)
     cat = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='posts')
     tags = models.ManyToManyField(TagPost, blank=True, related_name='tags')
+    husband = models.OneToOneField(Husband,
+                                   on_delete=models.SET_NULL,
+                                   blank=True,
+                                   null=True,
+                                   related_name='wuman'
+                                   )
     
     objects = models.Manager()
     published = PublishedManager()
