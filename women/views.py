@@ -1,5 +1,5 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import AddPostForm
 from .models import Women, Category, TagPost
 
@@ -44,7 +44,8 @@ def addpage(request: HttpRequest):
     if request.POST:
         form = AddPostForm(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
+            form.save()
+            return redirect('home')
     else:
         form = AddPostForm()
         
