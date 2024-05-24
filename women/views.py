@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
 from django.shortcuts import render, get_object_or_404, redirect
-from .forms import AddPostForm
+from .forms import AddPostForm, UploadFileForm
 from .models import Women, Category, TagPost
 
 
@@ -23,8 +23,26 @@ def index(request):
     return render(request, 'women/index.html', context=data)
 
 
-def about(request):
-    return render(request, 'women/about.html', {'title': 'О сайте', 'menu': menu})
+
+def handle_uploaded_file(f):
+    with open(f'uploads/{f.name}', 'wb+') as des:
+        for chunk in f.chunks():
+            des.write(chunk)
+
+
+def about(request: HttpRequest):
+    if request.POST:
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            handle_uploaded_file(form.cleaned_data['file'])
+    else:
+        form = UploadFileForm()
+    
+    return render(request, 'women/about.html',
+                  {'title': 'О сайте',
+                   'menu': menu,
+                   'form': form}
+                  )
 
 
 def show_post(request, post_slug):
