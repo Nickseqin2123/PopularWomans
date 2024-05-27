@@ -1,10 +1,12 @@
 from typing import Any
+from django.db.models.base import Model as Model
+from django.db.models.query import QuerySet
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from .forms import AddPostForm, UploadFileForm
-from .models import Women, Category, TagPost, UploadFiles
-from django.views import View
-from django.views.generic import ListView
+from .models import Women, UploadFiles
+from django.views.generic import ListView, DetailView, FormView
+from django.urls import reverse_lazy
 
 
 menu = [{'title': "О сайте", 'url_name': 'about'},
@@ -28,7 +30,6 @@ class WomenHome(ListView):
     def get_queryset(self):
         return Women.published.all().select_related('cat')
     
-    
 
 def about(request: HttpRequest):
     if request.POST:
@@ -46,46 +47,36 @@ def about(request: HttpRequest):
                   )
 
 
-def show_post(request, post_slug):
-    post = get_object_or_404(Women, slug=post_slug)
+class ShowPost(DetailView):
+    model = Women
+    template_name = 'women/post.html'
+    slug_url_kwarg = 'post_slug'
+    context_object_name = 'post'
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = context['post'].title
+        context['menu'] = menu
+        return context
+    
+    def get_object(self, queryset: QuerySet[Any] | None = ...) -> Model:
+        return get_object_or_404(Women.published, slug=self.kwargs[self.slug_url_kwarg])
 
-    data = {
-        'title': post.title,
-        'menu': menu,
-        'post': post,
-        'cat_selected': 1,
+
+class AddPage(FormView):
+    form_class = AddPostForm
+    template_name = 'women/addpage.html'
+    success_url = reverse_lazy('home')
+    
+    extra_conetxt = {
+        'title': 'Добавление статьи',
+        'menu': menu
     }
-
-    return render(request, 'women/post.html', data)
-
-
-class AddPage(View):
     
-    def get(self, request):
-        form = AddPostForm()
-        
-        data = {
-            'menu': menu,
-            'title': 'Добавление статьи',
-            'form': form
-        }
-        
-        return render(request, 'women/addpage.html', context=data)
-    
-    def post(self, request):
-        form = AddPostForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
 
-        data = {
-            'menu': menu,
-            'title': 'Добавление статьи',
-            'form': form
-        }
-        
-        return render(request, 'women/addpage.html', context=data)
-    
 
 def contact(request):
     return HttpResponse("Обратная связь")
@@ -109,21 +100,23 @@ class WomenCategory(ListView):
         context['menu'] = menu
         context['cat_selected'] = cat.pk
         return context
-        
-        
-def show_tag_postlist(request, tag_slug):
-    tag = get_object_or_404(TagPost, slug=tag_slug)
-    posts = tag.tags.filter(is_published=Women.Status.PUBLISHED).select_related('cat')
 
-    data = {
-        'title': f"Тэг: {tag.tag}",
-        'menu': menu,
-        'posts': posts,
-        'cat_selected': None,
-    }
-    
-    return render(request, 'women/index.html', context=data)
-    
 
+class WomenShowPosts(ListView):
+    template_name = 'women/index.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        return Women.published.filter(tags__slug=self.kwargs['tag_slug']).select_related('cat')
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        tag = context['posts'][0].tags.all()[0]
+        context['title'] = f'Тег - {tag.tag}'
+        context['menu'] = menu
+        context['cat_selected'] = None
+        return context
+    
+    
 def page_not_found(request, exception):
     return HttpResponseNotFound("<h1>Страница не найдена</h1>")
