@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from women import views
 from women.views import page_not_found
 from sitewomen import settings
 from django.conf.urls.static import static

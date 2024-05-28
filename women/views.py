@@ -5,27 +5,16 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
 from django.shortcuts import render, get_object_or_404
 from .forms import AddPostForm, UploadFileForm
 from .models import Women, UploadFiles
-from django.views.generic import ListView, DetailView, FormView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from .utils import DataMixin, menu
 
 
-menu = [{'title': "О сайте", 'url_name': 'about'},
-        {'title': "Добавить статью", 'url_name': 'add_page'},
-        {'title': "Обратная связь", 'url_name': 'contact'},
-        {'title': "Войти", 'url_name': 'login'}
-]
-
-
-class WomenHome(ListView):
+class WomenHome(DataMixin, ListView):
     template_name = 'women/index.html'
     context_object_name = 'posts'
-    
-    extra_context = {
-        'title': 'Главная страница',
-        'menu': menu,
-        'posts': Women.published.all().select_related('cat'),
-        'cat_selected': 0,
-    }
+    title_page = 'Главная страница'
+    cat_selected = 0
     
     def get_queryset(self):
         return Women.published.all().select_related('cat')
@@ -47,7 +36,7 @@ def about(request: HttpRequest):
                   )
 
 
-class ShowPost(DetailView):
+class ShowPost(DataMixin, DetailView):
     model = Women
     template_name = 'women/post.html'
     slug_url_kwarg = 'post_slug'
@@ -55,29 +44,34 @@ class ShowPost(DetailView):
     
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['title'] = context['post'].title
-        context['menu'] = menu
-        return context
+        return self.get_mixin_context(context, title=context['post'].title)
     
     def get_object(self, queryset: QuerySet[Any] | None = ...) -> Model:
         return get_object_or_404(Women.published, slug=self.kwargs[self.slug_url_kwarg])
 
 
-class AddPage(FormView):
+class AddPage(DataMixin, CreateView):
     form_class = AddPostForm
     template_name = 'women/addpage.html'
     success_url = reverse_lazy('home')
-    
-    extra_conetxt = {
-        'title': 'Добавление статьи',
-        'menu': menu
-    }
-    
-    def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)
+    title_page = 'Добавление статьи'
 
 
+class UpdatePage(DataMixin, UpdateView):
+    model = Women
+    fields = ('title', 'content', 'photo', 'is_published', 'cat')
+    template_name = 'women/addpage.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Редактируемые статьи'
+    
+
+class PostDelete(DataMixin, DeleteView):
+    model = Women
+    success_url = reverse_lazy('home')
+    template_name = 'women/delete_post.html'
+    title_page = 'Удаление статьи'
+    
+    
 def contact(request):
     return HttpResponse("Обратная связь")
 
@@ -86,7 +80,7 @@ def login(request):
     return HttpResponse("Авторизация")
 
 
-class WomenCategory(ListView):
+class WomenCategory(DataMixin, ListView):
     template_name = 'women/index.html'
     context_object_name = 'posts'
     
@@ -96,13 +90,13 @@ class WomenCategory(ListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         cat = context['posts'][0].cat
-        context['title'] = 'Категория - ' + cat.name
-        context['menu'] = menu
-        context['cat_selected'] = cat.pk
-        return context
+        return self.get_mixin_context(context,
+                                      title=f'Категория - {cat.name}',
+                                      cat_selected=cat.id
+                                    )
 
 
-class WomenShowPosts(ListView):
+class WomenShowPosts(DataMixin, ListView):
     template_name = 'women/index.html'
     context_object_name = 'posts'
 
@@ -112,10 +106,7 @@ class WomenShowPosts(ListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         tag = context['posts'][0].tags.all()[0]
-        context['title'] = f'Тег - {tag.tag}'
-        context['menu'] = menu
-        context['cat_selected'] = None
-        return context
+        return self.get_mixin_context(context, title=f'Тег: {tag.tag}')
     
     
 def page_not_found(request, exception):
