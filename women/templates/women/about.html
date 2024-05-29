@@ -2,9 +2,13 @@
 
 {% block content %}
 <h1>{{title}}</h1>
-<form action="" method='POST' enctype='multipart/form-data'>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <p><button type='sumbit'>Отправить</button></p>
-</form>
+<nav>
+    <ul>
+        {% for p in current_obj.paginator.page_range %}
+        <li>
+            <a href="?page={{ p }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>  
 {% endblock %}

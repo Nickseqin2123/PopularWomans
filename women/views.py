@@ -3,11 +3,12 @@ from django.db.models.base import Model as Model
 from django.db.models.query import QuerySet
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
 from django.shortcuts import render, get_object_or_404
-from .forms import AddPostForm, UploadFileForm
-from .models import Women, UploadFiles
+from .forms import AddPostForm
+from .models import Women
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from .utils import DataMixin, menu
+from django.core.paginator import Paginator
 
 
 class WomenHome(DataMixin, ListView):
@@ -21,18 +22,17 @@ class WomenHome(DataMixin, ListView):
     
 
 def about(request: HttpRequest):
-    if request.POST:
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            fp = UploadFiles(file=form.cleaned_data['file'])
-            fp.save()
-    else:
-        form = UploadFileForm()
+    contact_list = Women.published.all()
+    paginator = Paginator(contact_list, 3)
+    
+    page_number = request.GET.get('page')
+    
+    page_obj = paginator.get_page(page_number)
     
     return render(request, 'women/about.html',
                   {'title': 'О сайте',
                    'menu': menu,
-                   'form': form}
+                   'current_obj': page_obj}
                   )
 
 
