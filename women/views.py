@@ -9,6 +9,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from .utils import DataMixin, menu
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class WomenHome(DataMixin, ListView):
@@ -19,8 +21,9 @@ class WomenHome(DataMixin, ListView):
     
     def get_queryset(self):
         return Women.published.all().select_related('cat')
-    
 
+
+@login_required
 def about(request: HttpRequest):
     contact_list = Women.published.all()
     paginator = Paginator(contact_list, 3)
@@ -50,12 +53,18 @@ class ShowPost(DataMixin, DetailView):
         return get_object_or_404(Women.published, slug=self.kwargs[self.slug_url_kwarg])
 
 
-class AddPage(DataMixin, CreateView):
+class AddPage(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddPostForm
     template_name = 'women/addpage.html'
     success_url = reverse_lazy('home')
     title_page = 'Добавление статьи'
-
+    
+    def form_valid(self, form):
+        w = form.save(commit=False)
+        w.author = self.request.user
+        
+        return super().form_valid(form)
+    
 
 class UpdatePage(DataMixin, UpdateView):
     model = Women
@@ -107,7 +116,7 @@ class WomenShowPosts(DataMixin, ListView):
         context = super().get_context_data(**kwargs)
         tag = context['posts'][0].tags.all()[0]
         return self.get_mixin_context(context, title=f'Тег: {tag.tag}')
-    
-    
+
+
 def page_not_found(request, exception):
     return HttpResponseNotFound("<h1>Страница не найдена</h1>")

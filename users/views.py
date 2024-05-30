@@ -1,10 +1,10 @@
-from django.shortcuts import render
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.views import LoginView
+from .forms import LoginUserForm
 
 
-def login_user(request: HttpRequest):
-    return HttpResponse('login')
-
-
-def logout_user(request: HttpRequest):
-    return HttpResponse('logout')
+class LoginUser(LoginView):
+    form_class = LoginUserForm
+    template_name = 'users/login.html'
+    extra_context = {
+        'title': 'Авторизация'
+    }
