@@ -30,17 +30,18 @@ class RegisterUserForm(UserCreationForm):
              'first_name': 'Имя',
              'last_name': 'Фамилия'
         }
+        
         widgets = {
             'email': forms.TextInput(attrs={'class': 'form-input'}),
             'first_name': forms.TextInput(attrs={'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input'})
         }
     
-    def clean_email(self) -> dict[str, Any]:
-        email = self.cleaned_data['email']
-        if get_user_model().objects.filter(email=email).exists():
-            raise forms.ValidationError('Такой E-mail уже существует')
-        return email
+        def clean_email(self) -> dict[str, Any]:
+            email = self.cleaned_data['email']
+            if get_user_model().objects.filter(email=email).exists():
+                raise forms.ValidationError('Такой E-mail уже существует')
+            return email
 
 
 class ProfileUserForm(forms.ModelForm):
