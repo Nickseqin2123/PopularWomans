@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from .utils import DataMixin, menu
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
 class WomenHome(DataMixin, ListView):
@@ -53,25 +53,26 @@ class ShowPost(DataMixin, DetailView):
         return get_object_or_404(Women.published, slug=self.kwargs[self.slug_url_kwarg])
 
 
-class AddPage(LoginRequiredMixin, DataMixin, CreateView):
+class AddPage(PermissionRequiredMixin, LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddPostForm
     template_name = 'women/addpage.html'
     success_url = reverse_lazy('home')
     title_page = 'Добавление статьи'
+    permission_required = 'women.add_women'
     
     def form_valid(self, form):
         w = form.save(commit=False)
         w.author = self.request.user
-        
         return super().form_valid(form)
     
 
-class UpdatePage(DataMixin, UpdateView):
+class UpdatePage(PermissionRequiredMixin, DataMixin, UpdateView):
     model = Women
     fields = ('title', 'content', 'photo', 'is_published', 'cat')
     template_name = 'women/addpage.html'
     success_url = reverse_lazy('home')
     title_page = 'Редактируемые статьи'
+    permission_required = 'women.change_women'
     
 
 class PostDelete(DataMixin, DeleteView):
@@ -80,7 +81,7 @@ class PostDelete(DataMixin, DeleteView):
     template_name = 'women/delete_post.html'
     title_page = 'Удаление статьи'
     
-    
+
 def contact(request):
     return HttpResponse("Обратная связь")
 
