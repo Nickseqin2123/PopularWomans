@@ -12,4 +12,10 @@
     <p><a href="{% url 'users:password_reset' %}">Забыли пароль?</a></p>
 </form>
 
+<hr>
+<p>
+    <a href='{% url "social:begin" "github" %}'><img src="/media/social-auth/github.png" width='100px' height='100px'></a>
+    <a href='{% url "social:begin" "vk-oauth2" %}'><img class='vk' src="/media/social-auth/vk.png" width='100px' height='20px'></a>
+</p>
+
 {% endblock %}

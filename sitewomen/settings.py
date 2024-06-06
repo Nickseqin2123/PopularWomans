@@ -9,8 +9,8 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
 from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ywt^i-jce1cq%5q4s^p0130-h9x9vdmvmge-vf8g+htkga+=71
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sitewomen.ru']
 INTERNAL_IPS = ['127.0.0.1']
 
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'women.apps.WomenConfig',
     'users',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -146,6 +147,8 @@ LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'users:login'
 
 AUTHENTICATION_BACKENDS = [
+    'social_core.backends.vk.VKOAuth2',
+    'social_core.backends.github.GithubOAuth2',
     'django.contrib.auth.backends.ModelBackend',
     'users.authentication.EmailAuthBackend',
 ]
@@ -163,3 +166,10 @@ EMAIL_ADMIN = EMAIL_HOST_USER
 AUTH_USER_MODEL = 'users.User'
 
 DEFAULT_USER_IMAGE = f'{MEDIA_URL}users/default.png'
+
+SOCIAL_AUTH_GITHUB_KEY = 'Ov23ct7SVHHIfvR3YM8F'
+SOCIAL_AUTH_GITHUB_SECRET = 'cacdfb109d5710e42bbca5d0eb6c4a889a9f302a'
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '51939876'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'BSHUIrFTo2i3o8nUYRu1'
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
