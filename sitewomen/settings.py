@@ -43,9 +43,13 @@ INSTALLED_APPS = [
     'women.apps.WomenConfig',
     'users',
     'social_django',
+    'captcha',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,8 +57,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+# CACHE_MIDDLEWARE_ALIAS = 'default'
+# CACHE_MIDDLEWARE_SECONDS = 10
+# CACHE_MIDDLEWARE_KEY_PREFIX = 'sitewomen'
+# Используется редко
 
 ROOT_URLCONF = 'sitewomen.urls'
 
@@ -91,6 +99,13 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'USER': 'root',
         'PORT': 3306
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
     }
 }
 
@@ -168,8 +183,11 @@ AUTH_USER_MODEL = 'users.User'
 DEFAULT_USER_IMAGE = f'{MEDIA_URL}users/default.png'
 
 SOCIAL_AUTH_GITHUB_KEY = 'Ov23ct7SVHHIfvR3YM8F'
-SOCIAL_AUTH_GITHUB_SECRET = 'cacdfb109d5710e42bbca5d0eb6c4a889a9f302a'
+SOCIAL_AUTH_GITHUB_SECRET = 'e7c857196f8f957a40849754410af50e18fd35a7'
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = '51939876'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'BSHUIrFTo2i3o8nUYRu1'
 SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
+
+
+SITE_ID = 1

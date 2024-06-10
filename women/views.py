@@ -3,10 +3,11 @@ from django.db.models.base import Model as Model
 from django.db.models.query import QuerySet
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
 from django.shortcuts import render, get_object_or_404
-from .forms import AddPostForm
+from .forms import AddPostForm, ContactForm
 from .models import Women
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
+from django.core.cache import cache
 from .utils import DataMixin, menu
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -20,7 +21,12 @@ class WomenHome(DataMixin, ListView):
     cat_selected = 0
     
     def get_queryset(self):
-        return Women.published.all().select_related('cat')
+        w_lst = cache.get('women_posts')
+        if not w_lst:
+            w_lst = Women.published.all().select_related('cat')
+            cache.set('women_posts', w_lst, 60)
+        
+        return w_lst
 
 
 @login_required
@@ -82,8 +88,15 @@ class PostDelete(DataMixin, DeleteView):
     title_page = 'Удаление статьи'
     
 
-def contact(request):
-    return HttpResponse("Обратная связь")
+class ContactFormView(LoginRequiredMixin, DataMixin, FormView):
+    form_class = ContactForm
+    template_name = 'women/contact.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Обратная связь'
+    
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return super().form_valid(form)
 
 
 def login(request):
